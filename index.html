@@ -313,9 +313,10 @@ function openEntry(kind,eventId,recordId=null,inline=false){
         <button type="button" class="paychoice ${method==='mbway'?'active':''}" data-method="mbway" onclick="chooseSalePayment('mbway')">${icon('phone')}<span>MB WAY</span></button>
         <button type="button" class="paychoice ${method==='unpaid'?'active':''}" data-method="unpaid" onclick="chooseSalePayment('unpaid')">${icon('clock')}<span>Em falta</span></button>
       </div></div>
+      ${input('person','Vendido a (opcional)',r?.person||'')}
       <div id="unpaidFields" class="unpaid-panel" ${method==='unpaid'?'':'hidden'}>
-        <div class="unpaid-hint">Identifica quem fica com o pagamento pendente.</div>
-        ${input('person','Nome',r?.person||'')}${input('contact','Contacto (opcional)',r?.contact||'')}
+        <div class="unpaid-hint">Para um pagamento em falta, preenche o nome em “Vendido a”.</div>
+        ${input('contact','Contacto (opcional)',r?.contact||'')}
       </div>
       <div class="sale-total"><span>Total desta venda</span><b id="saleTotalValue">${euro((r?.quantity||1)*defaultPrice+(r?.extraCents||0))}</b></div>
       <details class="sale-more" id="saleMore" ${showMore?'open':''}><summary>Preço, donativo e notas</summary>
@@ -333,7 +334,7 @@ function openEntry(kind,eventId,recordId=null,inline=false){
       if(eventId){const ev=eventById(eventId);available=ev.booksTaken-eventTotals(eventId).used+existingQty}
       else{const openAlloc=state.events.filter(x=>x.status==='open').reduce((a,x)=>a+Math.max(0,x.booksTaken-eventTotals(x.id).used),0);available=state.settings.initialStock-totals().used-openAlloc+existingQty}
       if(q>available)return toast(`Só há ${Math.max(0,available)} livros disponíveis.`);
-      const contact=String(fd.get('contact')||'').trim();const data={eventId:eventId??null,kind:'sale',quantity:q,unitPriceCents:price,extraCents:extra,paymentMethod:method,paymentStatus:method==='unpaid'?'pending':'paid',person:method==='unpaid'||r?person:'',contact:method==='unpaid'||r?contact:'',note:String(fd.get('note')||'').trim()};
+      const contact=String(fd.get('contact')||'').trim();const data={eventId:eventId??null,kind:'sale',quantity:q,unitPriceCents:price,extraCents:extra,paymentMethod:method,paymentStatus:method==='unpaid'?'pending':'paid',person,contact,note:String(fd.get('note')||'').trim()};
       if(r){Object.assign(r,data);r.paidAt=data.paymentStatus==='paid'?(r.paidAt||now()):null}
       else state.records.push({id:idFor(state.records),...data,createdAt:now(),paidAt:data.paymentStatus==='paid'?now():null});
       if(inline){delete stationDrafts[stationKey()];stationNotice=`${q} livro${q===1?'':'s'} · ${euro(q*price+extra)} · ${methodLabel(method)}. Registo adicionado.`}closeModal();toast(r?'Venda atualizada':'Venda registada');persist()
